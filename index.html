@@ -1062,8 +1062,9 @@ async function apiCall(action, data={}) {
   setSyncing(true);
   try {
     const payload = encodeURIComponent(JSON.stringify({action, data}));
-    const url = API_URL + '?payload=' + payload;
-    const res = await fetch(url, { method: 'GET' });
+    const directUrl = API_URL + '?payload=' + payload;
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
+    const res = await fetch(proxyUrl, { method: 'GET' });
     const json = await res.json();
     if(!json.ok) throw new Error(json.error || 'Erreur serveur');
     return json;
