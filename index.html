@@ -2060,9 +2060,12 @@ document.addEventListener('keydown',e=>{
 // INIT
 // ════════════════════════════════════
 const today=new Date().toISOString().slice(0,10);
-['pil-date','t-echeance','v-date','c-date','c-deadline','v-next'].forEach(id=>{
-  const el=document.getElementById(id); if(el&&!el.value) el.value=today;
-});
+function initDates(){
+  ['pil-date','t-echeance','v-date','c-date','c-deadline','v-next'].forEach(id=>{
+    try{ const el=document.getElementById(id); if(el&&el.type==='date'&&!el.value) el.value=today; }catch(e){}
+  });
+}
+initDates();
 render('accueil');
 </script>
 </body>
