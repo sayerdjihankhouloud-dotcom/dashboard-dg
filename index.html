@@ -1151,6 +1151,38 @@ function dismissBanner() { document.getElementById('setup-banner').classList.add
 
 function save() { saveLocal(); }
 
+async function push(action, data) {
+  if(!API_URL) { saveLocal(); return; }
+  try {
+    const payload = encodeURIComponent(JSON.stringify({action:action, data:data}));
+    const directUrl = API_URL + '?payload=' + payload;
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
+    const res = await fetch(proxyUrl, { method: 'GET' });
+    const text = await res.text();
+    const json = JSON.parse(text);
+    if(!json.ok) throw new Error(json.error || 'Erreur');
+    saveLocal();
+  } catch(e) {
+    saveLocal();
+    toast("Sauvegarde locale uniquement", 'warn');
+  }
+}
+
+async function del(action, id) {
+  if(!API_URL) { saveLocal(); return; }
+  try {
+    const payload = encodeURIComponent(JSON.stringify({action:action, id:id}));
+    const directUrl = API_URL + '?payload=' + payload;
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
+    const res = await fetch(proxyUrl, { method: 'GET' });
+    const text = await res.text();
+    const json = JSON.parse(text);
+    saveLocal();
+  } catch(e) {
+    saveLocal();
+  }
+}
+
 // ════════════════════════════════════
 // CHARTS instances
 // ════════════════════════════════════
