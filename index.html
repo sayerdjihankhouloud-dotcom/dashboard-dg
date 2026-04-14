@@ -1074,6 +1074,30 @@ async function apiGet(action) {
   return apiCall(action, {});
 }
 
+async function syncFromSheets() {
+  if(!API_URL) { setOffline(); hideLoading(); return; }
+  showLoading('Chargement depuis Google Sheets...');
+  try {
+    const res = await apiCall('getAll', {});
+    S.taches   = res.taches   || [];
+    S.visites  = res.visites  || [];
+    S.clients  = res.clients  || [];
+    S.pilotage = res.pilotage || [];
+    if(res.config) {
+      S.sites  = res.config.sites  || S.sites;
+      S.params = res.config.params || S.params;
+    }
+    saveLocal(); setOnline();
+    toast("Synchronise avec Google Sheets", 'success');
+  } catch(e) {
+    setOffline();
+    toast("Mode hors-ligne - donnees locales", 'warn');
+  } finally {
+    hideLoading();
+    render(currentPage());
+  }
+}
+
 // ════════════════════════════════════
 // SYNC UI
 // ════════════════════════════════════
