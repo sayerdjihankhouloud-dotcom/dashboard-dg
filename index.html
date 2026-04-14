@@ -583,11 +583,23 @@ body {
 .ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
 
 @media (max-width: 768px) {
-  .sidebar { display: none; }
+  .sidebar { position:fixed;top:0;left:-260px;height:100%;z-index:200;transition:left .25s ease;width:240px; }
+  .sidebar.open { left:0;box-shadow:4px 0 20px rgba(0,0,0,.15); }
+  .mobile-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199; }
+  .mobile-overlay.open { display:block; }
   .dash-grid { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
   .detail-panel { width: 100%; }
+  .hamburger { display:flex; }
 }
+.hamburger {
+  display:none;
+  flex-direction:column;gap:5px;cursor:pointer;
+  padding:6px;border-radius:var(--radius);
+  border:1px solid var(--border);background:var(--surface);
+  margin-right:8px;
+}
+.hamburger span { width:18px;height:2px;background:var(--text);border-radius:99px; }
 
 /* ── SYNC STATUS ── */
 .sync-bar{display:flex;align-items:center;gap:8px;padding:8px 10px;margin:8px 8px 0;border-radius:var(--radius);background:var(--surface2);font-size:12px;color:var(--muted)}
@@ -666,7 +678,11 @@ body {
 
 <!-- ══ MAIN ══ -->
 <div class="main">
+  <div class="mobile-overlay" id="mobile-overlay" onclick="closeSidebar()"></div>
   <div class="topbar">
+    <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+      <span></span><span></span><span></span>
+    </button>
     <div>
       <div class="topbar-title" id="topbar-title">Accueil</div>
     </div>
@@ -1223,6 +1239,7 @@ function goto(id) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   document.querySelector(`[onclick="goto('${id}')"]`).classList.add('active');
+  closeSidebar();
   document.getElementById('topbar-title').textContent = PAGE_TITLES[id] || id;
   document.getElementById('topbar-actions').innerHTML = '';
   closeDetail();
@@ -2110,6 +2127,18 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){closeDetail();document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));closeCtx();}
   if(e.ctrlKey&&e.key==='k'){e.preventDefault();document.querySelector('.search-input')?.focus();}
 });
+
+// ════════════════════════════════════
+// MOBILE MENU
+// ════════════════════════════════════
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('mobile-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('mobile-overlay').classList.remove('open');
+}
 
 // ════════════════════════════════════
 // INIT
