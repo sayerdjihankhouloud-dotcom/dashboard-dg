@@ -1107,7 +1107,8 @@ async function syncFromSheets() {
     S.clients  = clean(res.clients);
     S.pilotage = clean(res.pilotage);
     if(res.config) {
-      S.sites  = res.config.sites  || S.sites;
+      const newSites = res.config.sites || [];
+      S.sites = [...new Set([...newSites].map(s=>s.trim()).filter(Boolean))];
       S.params = Object.assign({objVisites:4,seuilCritique:50,seuilSurveillance:70,seuilExcellent:85}, S.params, res.config.params||{});
     }
     saveLocal(); setOnline();
@@ -1205,6 +1206,7 @@ async function del(action, id) {
 }
 
 async function pushConfig() {
+  S.sites = [...new Set(S.sites.map(s=>s.trim()).filter(Boolean))];
   if(!API_URL) { saveLocal(); return; }
   try {
     const payload = JSON.stringify({action:'saveConfig', data:{sites:S.sites, params:S.params}});
@@ -1920,7 +1922,7 @@ function renderParametres() {
     </div>
   `).join('');
 }
-function addSite() { const v=document.getElementById('new-site').value.trim(); if(!v) return; if(!S.sites.includes(v)) S.sites.push(v); document.getElementById('new-site').value=''; pushConfig(); renderParametres(); toast('Site ajouté','success'); }
+function addSite() { const v=document.getElementById('new-site').value.trim(); if(!v) return; if(!S.sites.map(x=>x.toLowerCase()).includes(v.toLowerCase())) S.sites.push(v); document.getElementById('new-site').value=''; pushConfig(); renderParametres(); toast('Site ajouté','success'); }
 function deleteSite(i) { S.sites.splice(i,1); pushConfig(); renderParametres(); }
 function saveParams() { S.params={seuilCritique:+document.getElementById('seuil-critique').value,seuilSurveillance:+document.getElementById('seuil-surveillance').value,seuilExcellent:+document.getElementById('seuil-excellent').value,objVisites:+document.getElementById('obj-visites').value}; pushConfig(); toast('Paramètres sauvegardés','success'); }
 function resetAll() { if(!confirm("Réinitialiser TOUTES les données ?")) return; localStorage.removeItem(STORE); localStorage.removeItem(LS_URL); location.reload(); }
@@ -2073,7 +2075,7 @@ function saveTache() {
   if(!s||!t) return toast('Site et tâche obligatoires','error');
   const obj={id:uid(),site:s,client:document.getElementById('t-client').value,tache:t,sous:document.getElementById('t-sous').value,prio:document.getElementById('t-prio').value,statut:document.getElementById('t-statut').value,echeance:document.getElementById('t-echeance').value,urgence:document.getElementById('t-urgence').value,action:document.getElementById('t-action').value,tprevu:+document.getElementById('t-tprevu').value||null,treel:+document.getElementById('t-treel').value||null,secteur:document.getElementById('t-secteur').value,created:Date.now()};
   S.taches.push(obj);
-  if(s&&!S.sites.includes(s)){S.sites.push(s);pushConfig();}
+  if(s&&!S.sites.map(x=>x.toLowerCase()).includes(s.toLowerCase())){S.sites.push(s);pushConfig();}
   closeModal('modal-tache'); render(); push('saveTache',obj); toast('Tâche ajoutée','success');
   ['t-site','t-client','t-tache','t-sous','t-action','t-tprevu','t-treel','t-secteur'].forEach(id=>{document.getElementById(id).value='';});
 }
@@ -2083,7 +2085,7 @@ function saveVisite() {
   if(!s) return toast('Site obligatoire','error');
   const objV={id:uid(),date:document.getElementById('v-date').value,site:s,client:document.getElementById('v-client').value,type:document.getElementById('v-type').value,resp:document.getElementById('v-resp').value,duree:+document.getElementById('v-duree').value||null,statut:document.getElementById('v-statut').value,conf:document.getElementById('v-conf').value,comment:document.getElementById('v-comment').value,next:document.getElementById('v-next').value};
   S.visites.push(objV);
-  if(s&&!S.sites.includes(s)){S.sites.push(s);pushConfig();}
+  if(s&&!S.sites.map(x=>x.toLowerCase()).includes(s.toLowerCase())){S.sites.push(s);pushConfig();}
   closeModal('modal-visite'); render(); push('saveVisite',objV); toast('Visite enregistrée','success');
 }
 
