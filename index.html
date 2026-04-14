@@ -1047,10 +1047,11 @@ let isOnline = false;
 
 const DEFAULT = {
   taches: [], visites: [], clients: [], pilotage: [],
-  sites: [], params: { objVisites:4 }
+  sites: [], params: { objVisites:4, seuilCritique:50, seuilSurveillance:70, seuilExcellent:85 }
 };
 
 let S = JSON.parse(localStorage.getItem(STORE) || 'null') || JSON.parse(JSON.stringify(DEFAULT));
+S.params = Object.assign({objVisites:4,seuilCritique:50,seuilSurveillance:70,seuilExcellent:85}, S.params||{});
 function saveLocal() { localStorage.setItem(STORE, JSON.stringify(S)); }
 function uid() { return '_' + Math.random().toString(36).slice(2,9); }
 
@@ -1086,7 +1087,7 @@ async function syncFromSheets() {
     S.pilotage = res.pilotage || [];
     if(res.config) {
       S.sites  = res.config.sites  || S.sites;
-      S.params = res.config.params || S.params;
+      S.params = Object.assign({objVisites:4,seuilCritique:50,seuilSurveillance:70,seuilExcellent:85}, S.params, res.config.params||{});
     }
     saveLocal(); setOnline();
     toast("Synchronise avec Google Sheets", 'success');
@@ -1836,10 +1837,10 @@ function renderTerminees() {
 // ════════════════════════════════════
 function renderParametres() {
   const urlEl=document.getElementById('param-api-url'); if(urlEl) urlEl.value=API_URL;
-  document.getElementById('seuil-critique').value=S.params.seuilCritique;
-  document.getElementById('seuil-surveillance').value=S.params.seuilSurveillance;
-  document.getElementById('seuil-excellent').value=S.params.seuilExcellent;
-  document.getElementById('obj-visites').value=S.params.objVisites;
+  document.getElementById('seuil-critique').value=S.params.seuilCritique||50;
+  document.getElementById('seuil-surveillance').value=S.params.seuilSurveillance||70;
+  document.getElementById('seuil-excellent').value=S.params.seuilExcellent||85;
+  document.getElementById('obj-visites').value=S.params.objVisites||4;
   const sl=document.getElementById('sites-list');
   sl.innerHTML=S.sites.map((s,i)=>`
     <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
