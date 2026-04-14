@@ -1062,13 +1062,16 @@ async function apiCall(action, data={}) {
   if(!API_URL) throw new Error('Pas de connexion');
   setSyncing(true);
   try {
-    const payload = encodeURIComponent(JSON.stringify({action, data}));
+    const payload = encodeURIComponent(JSON.stringify({action:action, data:data}));
     const directUrl = API_URL + '?payload=' + payload;
     const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
     const res = await fetch(proxyUrl, { method: 'GET' });
-    const json = await res.json();
+    const text = await res.text();
+    const json = JSON.parse(text);
     if(!json.ok) throw new Error(json.error || 'Erreur serveur');
     return json;
+  } catch(err) {
+    throw err;
   } finally { setSyncing(false); }
 }
 
