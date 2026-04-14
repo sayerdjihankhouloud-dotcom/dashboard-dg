@@ -1062,17 +1062,18 @@ async function apiCall(action, data={}) {
   if(!API_URL) throw new Error('Pas de connexion');
   setSyncing(true);
   try {
-    const payload = encodeURIComponent(JSON.stringify({action:action, data:data}));
-    const directUrl = API_URL + '?payload=' + payload;
-    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
-    const res = await fetch(proxyUrl, { method: 'GET' });
+    const payload = JSON.stringify({action:action, data:data});
+    const encoded = encodeURIComponent(payload);
+    const url = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + encoded);
+    const res = await fetch(url, {method:'GET', cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
     const json = JSON.parse(text);
     if(!json.ok) throw new Error(json.error || 'Erreur serveur');
     return json;
-  } catch(err) {
-    throw err;
-  } finally { setSyncing(false); }
+  } finally {
+    setSyncing(false);
+  }
 }
 
 async function apiGet(action) {
@@ -1155,14 +1156,22 @@ function save() { saveLocal(); }
 async function push(action, data) {
   saveLocal();
   if(!API_URL) return;
-  try {
-    const payload = encodeURIComponent(JSON.stringify({action:action, data:data}));
-    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + payload);
-    const res = await fetch(proxyUrl);
-    const json = JSON.parse(await res.text());
-    if(!json.ok) throw new Error(json.error||'Erreur');
-  } catch(e) {
-    console.warn('Push failed:', e);
+  let attempts = 0;
+  while(attempts < 3) {
+    try {
+      const payload = JSON.stringify({action:action, data:data});
+      const encoded = encodeURIComponent(payload);
+      const url = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + encoded);
+      const res = await fetch(url, {method:'GET', cache:'no-store'});
+      const text = await res.text();
+      const json = JSON.parse(text);
+      if(json.ok) return;
+      throw new Error(json.error || 'Erreur');
+    } catch(e) {
+      attempts++;
+      if(attempts >= 3) { console.warn('Push failed after 3 attempts:', e); return; }
+      await new Promise(r => setTimeout(r, 1000 * attempts));
+    }
   }
 }
 
@@ -1170,15 +1179,30 @@ async function del(action, id) {
   saveLocal();
   if(!API_URL) return;
   try {
-    const payload = encodeURIComponent(JSON.stringify({action:action, id:id}));
-    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + payload);
-    await fetch(proxyUrl);
+    const payload = JSON.stringify({action:action, id:id});
+    const encoded = encodeURIComponent(payload);
+    const url = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + encoded);
+    await fetch(url, {method:'GET', cache:'no-store'});
   } catch(e) {
     console.warn('Del failed:', e);
   }
 }
 
+async function pushConfig() {
+  if(!API_URL) { saveLocal(); return; }
+  try {
+    const payload = JSON.stringify({action:'saveConfig', data:{sites:S.sites, params:S.params}});
+    const encoded = encodeURIComponent(payload);
+    const url = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + encoded);
+    await fetch(url, {method:'GET', cache:'no-store'});
+    saveLocal();
+  } catch(e) {
+    saveLocal();
+  }
+}
+
 // ════════════════════════════════════
+// CHARTS instances// ════════════════════════════════════
 // CHARTS instances
 // ════════════════════════════════════
 let _charts = {};
@@ -2032,7 +2056,7 @@ function saveTache() {
   if(!s||!t) return toast('Site et tâche obligatoires','error');
   const obj={id:uid(),site:s,client:document.getElementById('t-client').value,tache:t,sous:document.getElementById('t-sous').value,prio:document.getElementById('t-prio').value,statut:document.getElementById('t-statut').value,echeance:document.getElementById('t-echeance').value,urgence:document.getElementById('t-urgence').value,action:document.getElementById('t-action').value,tprevu:+document.getElementById('t-tprevu').value||null,treel:+document.getElementById('t-treel').value||null,secteur:document.getElementById('t-secteur').value,created:Date.now()};
   S.taches.push(obj);
-  if(s&&!S.sites.includes(s)) S.sites.push(s);
+  if(s&&!S.sites.includes(s)){S.sites.push(s);pushConfig();}
   closeModal('modal-tache'); render(); push('saveTache',obj); toast('Tâche ajoutée','success');
   ['t-site','t-client','t-tache','t-sous','t-action','t-tprevu','t-treel','t-secteur'].forEach(id=>{document.getElementById(id).value='';});
 }
@@ -2042,7 +2066,7 @@ function saveVisite() {
   if(!s) return toast('Site obligatoire','error');
   const objV={id:uid(),date:document.getElementById('v-date').value,site:s,client:document.getElementById('v-client').value,type:document.getElementById('v-type').value,resp:document.getElementById('v-resp').value,duree:+document.getElementById('v-duree').value||null,statut:document.getElementById('v-statut').value,conf:document.getElementById('v-conf').value,comment:document.getElementById('v-comment').value,next:document.getElementById('v-next').value};
   S.visites.push(objV);
-  if(s&&!S.sites.includes(s)) S.sites.push(s);
+  if(s&&!S.sites.includes(s)){S.sites.push(s);pushConfig();}
   closeModal('modal-visite'); render(); push('saveVisite',objV); toast('Visite enregistrée','success');
 }
 
