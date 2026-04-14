@@ -1084,10 +1084,11 @@ async function syncFromSheets() {
   showLoading('Chargement depuis Google Sheets...');
   try {
     const res = await apiCall('getAll', {});
-    S.taches   = res.taches   || [];
-    S.visites  = res.visites  || [];
-    S.clients  = res.clients  || [];
-    S.pilotage = res.pilotage || [];
+    const clean = arr => (arr||[]).filter(r => r.id && String(r.id).trim() !== '');
+    S.taches   = clean(res.taches);
+    S.visites  = clean(res.visites);
+    S.clients  = clean(res.clients);
+    S.pilotage = clean(res.pilotage);
     if(res.config) {
       S.sites  = res.config.sites  || S.sites;
       S.params = Object.assign({objVisites:4,seuilCritique:50,seuilSurveillance:70,seuilExcellent:85}, S.params, res.config.params||{});
@@ -1152,34 +1153,28 @@ function dismissBanner() { document.getElementById('setup-banner').classList.add
 function save() { saveLocal(); }
 
 async function push(action, data) {
-  if(!API_URL) { saveLocal(); return; }
+  saveLocal();
+  if(!API_URL) return;
   try {
     const payload = encodeURIComponent(JSON.stringify({action:action, data:data}));
-    const directUrl = API_URL + '?payload=' + payload;
-    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
-    const res = await fetch(proxyUrl, { method: 'GET' });
-    const text = await res.text();
-    const json = JSON.parse(text);
-    if(!json.ok) throw new Error(json.error || 'Erreur');
-    saveLocal();
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + payload);
+    const res = await fetch(proxyUrl);
+    const json = JSON.parse(await res.text());
+    if(!json.ok) throw new Error(json.error||'Erreur');
   } catch(e) {
-    saveLocal();
-    toast("Sauvegarde locale uniquement", 'warn');
+    console.warn('Push failed:', e);
   }
 }
 
 async function del(action, id) {
-  if(!API_URL) { saveLocal(); return; }
+  saveLocal();
+  if(!API_URL) return;
   try {
     const payload = encodeURIComponent(JSON.stringify({action:action, id:id}));
-    const directUrl = API_URL + '?payload=' + payload;
-    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(directUrl);
-    const res = await fetch(proxyUrl, { method: 'GET' });
-    const text = await res.text();
-    const json = JSON.parse(text);
-    saveLocal();
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + payload);
+    await fetch(proxyUrl);
   } catch(e) {
-    saveLocal();
+    console.warn('Del failed:', e);
   }
 }
 
