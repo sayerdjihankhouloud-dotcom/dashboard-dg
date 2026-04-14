@@ -1086,7 +1086,7 @@ async function apiCall(action, data={}) {
   try {
     const payload = JSON.stringify({action:action, data:data});
     const encoded = encodeURIComponent(payload);
-    const url = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + encoded);
+    const url = 'https://dashboard-lbx7qcfrd-sayerdjihankhoulouds-projects.vercel.app/api/proxy?url=' + encodeURIComponent(API_URL + '?payload=' + encoded);
     const res = await fetch(url, {method:'GET', cache:'no-store'});
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
@@ -1184,7 +1184,7 @@ async function push(action, data) {
     try {
       const payload = JSON.stringify({action:action, data:data});
       const encoded = encodeURIComponent(payload);
-      const url = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + encoded);
+      const url = 'https://dashboard-lbx7qcfrd-sayerdjihankhoulouds-projects.vercel.app/api/proxy?url=' + encodeURIComponent(API_URL + '?payload=' + encoded);
       const res = await fetch(url, {method:'GET', cache:'no-store'});
       const text = await res.text();
       const json = JSON.parse(text);
@@ -1204,7 +1204,7 @@ async function del(action, id) {
   try {
     const payload = JSON.stringify({action:action, id:id});
     const encoded = encodeURIComponent(payload);
-    const url = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + encoded);
+    const url = 'https://dashboard-lbx7qcfrd-sayerdjihankhoulouds-projects.vercel.app/api/proxy?url=' + encodeURIComponent(API_URL + '?payload=' + encoded);
     await fetch(url, {method:'GET', cache:'no-store'});
   } catch(e) {
     console.warn('Del failed:', e);
@@ -1217,7 +1217,7 @@ async function pushConfig() {
   try {
     const payload = JSON.stringify({action:'saveConfig', data:{sites:S.sites, params:S.params}});
     const encoded = encodeURIComponent(payload);
-    const url = 'https://corsproxy.io/?' + encodeURIComponent(API_URL + '?payload=' + encoded);
+    const url = 'https://dashboard-lbx7qcfrd-sayerdjihankhoulouds-projects.vercel.app/api/proxy?url=' + encodeURIComponent(API_URL + '?payload=' + encoded);
     await fetch(url, {method:'GET', cache:'no-store'});
     saveLocal();
   } catch(e) {
